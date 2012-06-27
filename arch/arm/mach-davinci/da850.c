@@ -248,6 +248,13 @@ static struct clk pruss_clk = {
 	.flags		= ALWAYS_ENABLED,
 };
 
+static struct clk pru_clk = {
+	.name		= "pru_ck",
+	.parent		= &pll0_sysclk2,
+	.lpsc		= DA8XX_LPSC0_DMAX,
+	.flags      = ALWAYS_ENABLED,
+};
+
 static struct clk uart0_clk = {
 	.name		= "uart0",
 	.parent		= &pll0_sysclk2,
@@ -443,6 +450,15 @@ static struct clk usb20_clk = {
 	.gpsc		= 1,
 };
 
+static struct clk mcasp_pru_clk = {
+	.name		= "mcasp_pru",
+	.parent		= &pll0_sysclk2,
+	.lpsc		= DA8XX_LPSC1_McASP0,
+	.gpsc		= 1,
+	.flags		= DA850_CLK_ASYNC3,
+};
+
+
 static struct clk_lookup da850_clks[] = {
 	CLK(NULL,		"ref",		&ref_clk),
 	CLK(NULL,		"pll0",		&pll0_clk),
@@ -470,7 +486,8 @@ static struct clk_lookup da850_clks[] = {
 	CLK(NULL,		"tptc1",	&tptc1_clk),
 	CLK(NULL,		"tpcc1",	&tpcc1_clk),
 	CLK(NULL,		"tptc2",	&tptc2_clk),
-	CLK(NULL,       "pruss",    &pruss_clk),
+	//CLK(NULL,       "pruss",    &pruss_clk),
+	CLK(NULL,		"pru_ck",	&pru_clk),
 	CLK(NULL,		"uart0",	&uart0_clk),
 	CLK(NULL,		"uart1",	&uart1_clk),
 	CLK(NULL,		"uart2",	&uart2_clk),
@@ -481,6 +498,7 @@ static struct clk_lookup da850_clks[] = {
 	CLK(NULL,		"arm",		&arm_clk),
 	CLK(NULL,		"rmii",		&rmii_clk),
 	CLK("davinci_emac.1",	NULL,		&emac_clk),
+	CLK(NULL,	"mcasp_pru",	&mcasp_pru_clk),
 	CLK("davinci-mcasp.0",	NULL,		&mcasp_clk),
 	CLK("da8xx_lcdc.0",	NULL,		&lcdc_clk),
 	CLK("davinci_mmc.0",	NULL,		&mmcsd0_clk),
@@ -559,6 +577,7 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850,	ACLKX,		0,	4,	15,	1,	false)
 	MUX_CFG(DA850,	AFSR,		0,	8,	15,	1,	false)
 	MUX_CFG(DA850,	AFSX,		0,	12,	15,	1,	false)
+	MUX_CFG(DA850,	AHCLKR,		0,	16,	15,	1,	false)
 	MUX_CFG(DA850,	AHCLKX,		0,	20,	15,	1,	false)
 	MUX_CFG(DA850,	AMUTE,		0,	24,	15,	1,	false)
 	MUX_CFG(DA850,	AXR_15,		1,	0,	15,	1,	false)
@@ -748,7 +767,27 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850, ECAP1_APWM1,	1,	28,	15,	4,	false)
 	/* eCAP2 function */
 	MUX_CFG(DA850, ECAP2_APWM2,	1,	0,	15,	4,	false)
+
+	/* Soft-UART flow control */
+   	MUX_CFG(DA850, PRU0_R31_20,  0,  12, 15, 0,  false)
+    	MUX_CFG(DA850, PRU0_R30_20,  0,  0, 15, 4,  false)
+	/* Soft-UART DIR */
+    	MUX_CFG(DA850, PRU0_R30_16,  0,  24, 15, 2,  false)
 #endif
+};
+
+
+const short da850_pru_suart_pins[] __initdata = {
+	//DA850_AHCLKX, DA850_ACLKX, DA850_AFSX,
+	//    DA850_AHCLKR, DA850_ACLKR, DA850_AFSR,
+	//DA850_AHCLKR,
+	 DA850_PRU0_R30_20, DA850_PRU0_R31_20,DA850_PRU0_R30_16,
+   	 // nmy modify
+	/*DA850_AXR_0,DA850_AXR_1,DA850_AXR_3,DA850_AXR_4,DA850_AXR_5,DA850_AXR_6,*/
+	DA850_AXR_7,DA850_AXR_8,DA850_AXR_9, DA850_AXR_10,DA850_AXR_11, 
+	DA850_AXR_12,DA850_AXR_13, DA850_AXR_14,  DA850_AXR_15,
+	//DA850_UART1_RXD, DA850_UART1_TXD,
+	-1
 };
 
 const short da850_uart0_pins[] __initdata = {

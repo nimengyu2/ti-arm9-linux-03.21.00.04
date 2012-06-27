@@ -1863,6 +1863,42 @@ static void da850_wl12xx_init(void)
 	da850_wl12xx_set_platform_data();
 }
 
+
+static int __init da850_evm_config_pru_suart(void)
+{
+	int ret;
+
+	if (!machine_is_davinci_da850_evm())
+		return 0;
+	lsd_dbg(LSD_DBG,"enter function da850_evm_config_pru_suart\n");
+
+	ret = davinci_cfg_reg_list(da850_pru_suart_pins);
+	if (ret)
+	{
+		pr_warning("da850_evm_init: da850_pru_suart_pins mux setup failed: %d\n",
+			ret);
+		lsd_dbg(LSD_ERR,"da850_evm_init: da850_pru_suart_pins mux setup failed: %d\n",
+			ret);
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: da850_pru_suart_pins mux setup ok: %d\n",
+			ret);
+	}
+	ret = da8xx_register_pru_suart();
+	if (ret)
+	{
+		pr_warning("da850_evm_init: pru suart registration failed: %d\n", ret);
+		lsd_dbg(LSD_ERR,"da850_evm_init: pru suart registration failed: %d\n", ret);
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: pru suart registration ok: %d\n", ret);
+	}
+	return ret;
+}
+device_initcall(da850_evm_config_pru_suart);
+
 static __init void da850_evm_init(void)
 {
 	int ret;
@@ -1896,6 +1932,7 @@ static __init void da850_evm_init(void)
 		pr_warning("da850_evm_init: UART 1 mux setup failed:"
 						" %d\n", ret);
 
+#if 0
 	ret = da850_register_sata(DA850EVM_SATA_REFCLKPN_RATE);
 	if (ret)
 		pr_warning("da850_evm_init: sata registration failed: %d\n",
@@ -1935,7 +1972,7 @@ static __init void da850_evm_init(void)
 
 		da850_wl12xx_init();
 	}
-
+#endif
 	davinci_serial_init(&da850_evm_uart_config);
 
 	if (have_imager())
@@ -1951,6 +1988,7 @@ static __init void da850_evm_init(void)
 	 */
 	__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
 
+#if 0
 	if (HAS_MCBSP0) {
 		if (HAS_EMAC)
 			pr_warning("WARNING: both MCBSP0 and EMAC are "
@@ -1979,7 +2017,9 @@ static __init void da850_evm_init(void)
 			pr_warning("da850_evm_init: mcbsp1 registration"
 					" failed: %d\n", ret);
 	}
+#endif
 	 
+#if 0
 	if (HAS_MCASP) {
 		if ((HAS_MCBSP0 || HAS_MCBSP1))
 			pr_warning("WARNING: both McASP and McBSP are enabled, "
@@ -1998,6 +2038,7 @@ static __init void da850_evm_init(void)
 
 		da8xx_register_mcasp(0, &da850_evm_snd_data);
 	}
+#endif
 
 	ret = davinci_cfg_reg_list(da850_lcdcntl_pins);
 	if (ret)
@@ -2040,6 +2081,7 @@ static __init void da850_evm_init(void)
 		pr_warning("da850_evm_init: suspend registration failed: %d\n",
 				ret);
 
+#if 0
 	if (system_rev & 0x100) {
 		((struct flash_platform_data *)da850evm_spi_info[0] \
 		.platform_data)->type = "w25x64";
@@ -2144,6 +2186,7 @@ static __init void da850_evm_init(void)
 	if (ret)
 		pr_warning("da850_evm_init: wl1271 device registration"
 				" failed: %d\n", ret);
+#endif
 	/* initilaize usb module */
 	da850_evm_usb_init();
 }

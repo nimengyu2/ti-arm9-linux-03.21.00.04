@@ -1632,4 +1632,6 @@ config SERIAL_ALTERA_UART_CONSOLE
 	help
 	  Enable a Altera UART port to be the system console.
 
+source "drivers/serial/omapl_pru/Kconfig"
+
 endmenu

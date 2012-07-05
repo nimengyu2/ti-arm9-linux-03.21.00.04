@@ -370,6 +370,12 @@ static struct platform_device *da850_evm_devices[] __initdata = {
 	&da850_evm_norflash_device,
 };
 
+// Modify by toby.zhang @2011.01.10
+// add nand device
+static struct platform_device *lsd_am1808_devices[] __initdata = {
+	&da850_evm_nandflash_device,	
+};
+
 static const short da850_evm_nand_pins[] = {
 	DA850_EMA_D_0, DA850_EMA_D_1, DA850_EMA_D_2, DA850_EMA_D_3,
 	DA850_EMA_D_4, DA850_EMA_D_5, DA850_EMA_D_6, DA850_EMA_D_7,
@@ -1303,13 +1309,16 @@ static struct tps6507x_board tps_board = {
 };
 
 static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
+#if 0
 	{
 		I2C_BOARD_INFO("24c256", 0x50),
 		.platform_data = &da850_evm_i2c_eeprom_info,
 	},
+#endif
 	{
 		I2C_BOARD_INFO("tlv320aic3x", 0x18),
 	},
+#if 0
 	{
 		I2C_BOARD_INFO("tca6416", 0x20),
 		.platform_data = &da850_evm_ui_expander_info,
@@ -1328,6 +1337,7 @@ static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
 	{
 		I2C_BOARD_INFO("PCA9543A", 0x73),
 	},
+#endif
 };
 
 static const short da850_evm_lcdc_pins[] = {
@@ -1988,6 +1998,23 @@ static __init void da850_evm_init(void)
 	 */
 	__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
 
+	
+	// nmy add nand support
+	ret = davinci_cfg_reg_list(da850_evm_nand_pins);
+	if (ret)
+	{
+		lsd_dbg(LSD_ERR,"da850_evm_init: nand mux setup failed: "
+				"%d\n", ret);
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: nand mux setup ok: "
+				"%d\n", ret);
+	}
+	platform_add_devices(lsd_am1808_devices,
+				ARRAY_SIZE(lsd_am1808_devices));
+	
+
 #if 0
 	if (HAS_MCBSP0) {
 		if (HAS_EMAC)
@@ -2089,9 +2116,12 @@ static __init void da850_evm_init(void)
 		((struct flash_platform_data *)da850evm_spi_info[0] \
 		.platform_data)->type = "m25p64";
 	}
-
+#endif
+	((struct flash_platform_data *)da850evm_spi_info[0] \
+		.platform_data)->type = "m25p64";
 	da850evm_init_spi1(da850evm_spi_info, ARRAY_SIZE(da850evm_spi_info));
 
+#if 0
 	if (HAS_VPIF_DISPLAY || HAS_VPIF_CAPTURE) {
 		ret = da850_register_vpif();
 		if (ret)

@@ -791,14 +791,14 @@ const short da850_pru_suart_pins[] __initdata = {
 };
 
 const short da850_uart0_pins[] __initdata = {
-	DA850_NUART0_CTS, DA850_NUART0_RTS, DA850_UART0_RXD, DA850_UART0_TXD,
+	/*DA850_NUART0_CTS, DA850_NUART0_RTS,*/ DA850_UART0_RXD, DA850_UART0_TXD,
 	-1
 };
 
 const short da850_uart1_pins[] __initdata = {
 	DA850_UART1_RXD, DA850_UART1_TXD,
 #ifdef CONFIG_DAVINCI_UART1_AFE
-	DA850_NUART1_CTS, DA850_NUART1_RTS,
+	//DA850_NUART1_CTS, DA850_NUART1_RTS,
 #endif
 	-1
 };

@@ -1387,7 +1387,7 @@ static void serial8250_enable_ms(struct uart_port *port)
 	if (up->bugs & UART_BUG_NOMSR)
 		return;
 
-	up->ier |= UART_IER_MSI;
+	//up->ier |= UART_IER_MSI;
 	serial_out(up, UART_IER, up->ier);
 }
 
@@ -2355,7 +2355,8 @@ serial8250_do_set_termios(struct uart_port *port, struct ktermios *termios,
 	up->ier &= ~UART_IER_MSI;
 	if (!(up->bugs & UART_BUG_NOMSR) &&
 			UART_ENABLE_MS(&up->port, termios->c_cflag))
-		up->ier |= UART_IER_MSI;
+		//up->ier |= UART_IER_MSI;
+		;
 	if (up->capabilities & UART_CAP_UUE)
 		up->ier |= UART_IER_UUE | UART_IER_RTOIE;
 

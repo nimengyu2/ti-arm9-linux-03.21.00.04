@@ -1939,8 +1939,28 @@ static __init void da850_evm_init(void)
 	/* Support for UART 1 */
 	ret = davinci_cfg_reg_list(da850_uart1_pins);
 	if (ret)
-		pr_warning("da850_evm_init: UART 1 mux setup failed:"
+	{
+		lsd_dbg(LSD_ERR,"da850_evm_init: UART 1 mux setup failed:"
 						" %d\n", ret);
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: UART 1 mux setup ok:"
+						" %d\n", ret);
+	}
+
+	// nmy add
+	ret = davinci_cfg_reg_list(da850_uart0_pins);
+	if (ret)
+	{
+		lsd_dbg(LSD_ERR,"da850_evm_init: UART 0 mux setup failed:"
+						" %d\n", ret);
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: UART 0 mux setup ok:"
+						" %d\n", ret);
+	}
 
 #if 0
 	ret = da850_register_sata(DA850EVM_SATA_REFCLKPN_RATE);
@@ -1996,7 +2016,7 @@ static __init void da850_evm_init(void)
 	 * accessing them causes endless "too much work in irq53" messages
 	 * with arago fs
 	 */
-	__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
+	//__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
 
 	
 	// nmy add nand support

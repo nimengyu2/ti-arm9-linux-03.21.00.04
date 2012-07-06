@@ -33,6 +33,7 @@
 
 #include "clock.h"
 #include "mux.h"
+#include <linux/lierda_debug.h>
 
 /* SoC specific clock flags */
 #define DA850_CLK_ASYNC3	BIT(16)
@@ -335,6 +336,17 @@ static struct clk mcasp_clk = {
 	.flags		= DA850_CLK_ASYNC3,
 };
 
+#if 0
+// nmy add
+static struct clk asp_clk = {
+	.name		= "asp",
+	.parent		= &pll0_sysclk2,
+	.lpsc		= DA850_LPSC1_MCBSP0,
+	.gpsc		= 1,
+};
+#endif
+
+
 static struct clk lcdc_clk = {
 	.name		= "lcdc",
 	.parent		= &pll0_sysclk2,
@@ -508,6 +520,8 @@ static struct clk_lookup da850_clks[] = {
 	CLK("spi_davinci.1",	NULL,		&spi1_clk),
 	CLK("ahci",             NULL,           &sata_clk),
 	CLK("davinci-mcbsp.0",	NULL,		&mcbsp0_clk),
+	// nmy add
+	//CLK("davinci-asp.0",	NULL,		&asp_clk),
 	CLK("davinci-mcbsp.1",	NULL,		&mcbsp1_clk),
 	CLK(NULL,		"vpif",		&vpif_clk),
 	CLK(NULL,		"ehrpwm",	&ehrpwm_clk),

@@ -13,6 +13,7 @@
 #include <linux/moduleparam.h>
 #include <linux/timer.h>
 #include <linux/interrupt.h>
+#define DEBUG    1 
 #include <linux/platform_device.h>
 #include <linux/i2c.h>
 #include <sound/core.h>
@@ -31,6 +32,7 @@
 #include "davinci-pcm.h"
 #include "davinci-i2s.h"
 #include "davinci-mcasp.h"
+#include <linux/lierda_debug.h>
 
 #define AUDIO_FORMAT (SND_SOC_DAIFMT_DSP_B | \
 		SND_SOC_DAIFMT_CBM_CFM | SND_SOC_DAIFMT_IB_NF)
@@ -157,12 +159,25 @@ static int evm_aic3x_init(struct snd_soc_pcm_runtime *rtd)
 }
 
 /* davinci-evm digital audio interface glue - connects codec <--> CPU */
+
 static struct snd_soc_dai_link dm6446_evm_dai = {
 	.name = "TLV320AIC3X",
 	.stream_name = "AIC3X",
 	.cpu_dai_name = "davinci-mcbsp",
 	.codec_dai_name = "tlv320aic3x-hifi",
 	.codec_name = "tlv320aic3x-codec.1-001b",
+	.platform_name = "davinci-pcm-audio",
+	.init = evm_aic3x_init,
+	.ops = &evm_ops,
+};
+
+
+static struct snd_soc_dai_link am1808_evm_dai = {
+	.name = "TLV320AIC3X",
+	.stream_name = "AIC3X",
+	.cpu_dai_name = "davinci-mcbsp.0",
+	.codec_dai_name = "tlv320aic3x-hifi",
+	.codec_name = "tlv320aic3x-codec.1-0018",
 	.platform_name = "davinci-pcm-audio",
 	.init = evm_aic3x_init,
 	.ops = &evm_ops,
@@ -219,6 +234,8 @@ static struct snd_soc_dai_link dm6467_evm_dai[] = {
 		.ops = &evm_spdif_ops,
 	},
 };
+
+
 static struct snd_soc_dai_link da8xx_evm_dai = {
 	.name = "TLV320AIC3X",
 	.stream_name = "AIC3X",
@@ -229,6 +246,7 @@ static struct snd_soc_dai_link da8xx_evm_dai = {
 	.init = evm_aic3x_init,
 	.ops = &evm_ops,
 };
+
 
 /* davinci dm6446 evm audio machine driver */
 static struct snd_soc_card dm6446_snd_soc_card_evm = {
@@ -266,7 +284,8 @@ static struct snd_soc_card da830_snd_soc_card = {
 
 static struct snd_soc_card da850_snd_soc_card = {
 	.name = "DA850/OMAP-L138 EVM",
-	.dai_link = &da8xx_evm_dai,
+	//.dai_link = &da8xx_evm_dai,
+	.dai_link = &am1808_evm_dai,
 	.num_links = 1,
 };
 
@@ -278,6 +297,7 @@ static int __init evm_init(void)
 	int index;
 	int ret;
 
+	lsd_audio_dbg(LSD_DBG,"enter function=%s\n",__FUNCTION__);
 	if (machine_is_davinci_evm()) {
 		evm_snd_dev_data = &dm6446_snd_soc_card_evm;
 		index = 0;
@@ -296,18 +316,30 @@ static int __init evm_init(void)
 	} else if (machine_is_davinci_da850_evm()) {
 		evm_snd_dev_data = &da850_snd_soc_card;
 		index = 0;
+		lsd_audio_dbg(LSD_DBG,"machine_is_davinci_da850_evm()\n");
 	} else
 		return -EINVAL;
 
 	evm_snd_device = platform_device_alloc("soc-audio", index);
 	if (!evm_snd_device)
+	{
+		lsd_audio_dbg(LSD_ERR,"platform_device_alloc soc-audio failed\n");
 		return -ENOMEM;
-
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"platform_device_alloc soc-audio ok\n");	
+	}
 	platform_set_drvdata(evm_snd_device, evm_snd_dev_data);
 	ret = platform_device_add(evm_snd_device);
 	if (ret)
+	{
 		platform_device_put(evm_snd_device);
-
+	}
+	else
+	{
+		
+	}
 	return ret;
 }
 

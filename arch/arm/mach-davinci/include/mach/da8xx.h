@@ -113,6 +113,9 @@ int __init da850_register_sata(unsigned long refclkpn);
 void __init da850_register_ehrpwm(char);
 int __init da850_register_ecap(char);
 int da8xx_register_pruss(void);
+// nmy add
+void __init am1808_init_asp(struct snd_platform_data *pdata);
+
 
 extern struct platform_device da8xx_serial_device;
 extern struct emac_platform_data da8xx_emac_pdata;

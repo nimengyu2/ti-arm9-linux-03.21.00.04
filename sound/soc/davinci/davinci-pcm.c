@@ -12,6 +12,7 @@
 
 #include <linux/module.h>
 #include <linux/init.h>
+#define DEBUG    1 
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>

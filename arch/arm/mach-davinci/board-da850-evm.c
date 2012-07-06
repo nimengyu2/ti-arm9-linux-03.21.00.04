@@ -1025,6 +1025,8 @@ static struct davinci_uart_config da850_evm_uart_config __initdata = {
 	.enabled_uarts = 0x7,
 };
 
+
+#if 0
 /* davinci da850 evm audio machine driver */
 static u8 da850_iis_serializer_direction[] = {
 	INACTIVE_MODE,	INACTIVE_MODE,	INACTIVE_MODE,	INACTIVE_MODE,
@@ -1045,6 +1047,11 @@ static struct snd_platform_data da850_evm_snd_data = {
 	.txnumevt	= 1,
 	.rxnumevt	= 1,
 };
+#endif
+
+#if 1
+static struct snd_platform_data am1808_evm_snd_data={};
+#endif
 
 static struct davinci_mcbsp_platform_data da850_mcbsp0_config = {
 	.inst	= 0,
@@ -1923,9 +1930,17 @@ static __init void da850_evm_init(void)
 
 	ret = davinci_cfg_reg_list(da850_i2c0_pins);
 	if (ret)
+	{
+		lsd_dbg(LSD_ERR,"da850_evm_init: i2c0 mux setup failed: %d\n",
+				ret);
 		pr_warning("da850_evm_init: i2c0 mux setup failed: %d\n",
 				ret);
-
+	}
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: i2c0 mux setup ok: %d\n",
+				ret);	
+	}
 	platform_device_register(&da850_gpio_i2c);
 
 	/* Register PRUSS device */
@@ -2005,8 +2020,10 @@ static __init void da850_evm_init(void)
 #endif
 	davinci_serial_init(&da850_evm_uart_config);
 
+#if 0
 	if (have_imager())
 		i2c_add_driver(&pca9543a_driver);
+#endif
 
 	i2c_register_board_info(1, da850_evm_i2c_devices,
 			ARRAY_SIZE(da850_evm_i2c_devices));
@@ -2086,6 +2103,23 @@ static __init void da850_evm_init(void)
 		da8xx_register_mcasp(0, &da850_evm_snd_data);
 	}
 #endif
+
+	// nmy add
+#if 1	
+	ret = davinci_cfg_reg_list(da850_mcbsp0_pins);
+	if (ret)
+	{
+		lsd_dbg(LSD_ERR,"da850_evm_init: mcbsp0 mux setup failed:"
+				" %d\n", ret);
+	}	
+	else
+	{
+		lsd_dbg(LSD_OK,"da850_evm_init: mcbsp0 mux setup ok:"
+				" %d\n", ret);
+	}
+	am1808_init_asp(&am1808_evm_snd_data);
+#endif
+
 
 	ret = davinci_cfg_reg_list(da850_lcdcntl_pins);
 	if (ret)

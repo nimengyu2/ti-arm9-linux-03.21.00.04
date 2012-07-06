@@ -50,6 +50,7 @@
 #include <sound/initval.h>
 #include <sound/tlv.h>
 #include <sound/tlv320aic3x.h>
+#include <linux/lierda_debug.h>
 
 #include "tlv320aic3x.h"
 
@@ -1354,14 +1355,23 @@ static int aic3x_probe(struct snd_soc_codec *codec)
 
 	ret = snd_soc_codec_set_cache_io(codec, 8, 8, aic3x->control_type);
 	if (ret != 0) {
+		lsd_audio_dbg(LSD_ERR,"Failed to set cache I/O: %d\n", ret);
 		dev_err(codec->dev, "Failed to set cache I/O: %d\n", ret);
 		return ret;
 	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"ok to set cache I/O: %d\n", ret);
+	}
 
+	lsd_audio_dbg(LSD_DBG,"aic3x->gpio_reset = %d\n", aic3x->gpio_reset);
 	if (aic3x->gpio_reset >= 0) {
 		ret = gpio_request(aic3x->gpio_reset, "tlv320aic3x reset");
 		if (ret != 0)
+		{
+			lsd_audio_dbg(LSD_ERR,"tlv320aic3x reset error\n");
 			goto err_gpio;
+		}
 		gpio_direction_output(aic3x->gpio_reset, 0);
 	}
 
@@ -1371,19 +1381,32 @@ static int aic3x_probe(struct snd_soc_codec *codec)
 	ret = regulator_bulk_get(codec->dev, ARRAY_SIZE(aic3x->supplies),
 				 aic3x->supplies);
 	if (ret != 0) {
+		lsd_audio_dbg(LSD_ERR,"Failed to request supplies: %d\n", ret);
 		dev_err(codec->dev, "Failed to request supplies: %d\n", ret);
 		goto err_get;
 	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"ok to request supplies: %d\n", ret);
+	}
+
 	for (i = 0; i < ARRAY_SIZE(aic3x->supplies); i++) {
 		aic3x->disable_nb[i].nb.notifier_call = aic3x_regulator_event;
 		aic3x->disable_nb[i].aic3x = aic3x;
 		ret = regulator_register_notifier(aic3x->supplies[i].consumer,
 						  &aic3x->disable_nb[i].nb);
 		if (ret) {
+			lsd_audio_dbg(LSD_ERR,"Failed to request regulator notifier: %d\n",
+				 ret);
 			dev_err(codec->dev,
 				"Failed to request regulator notifier: %d\n",
 				 ret);
 			goto err_notif;
+		}
+		else
+		{
+			lsd_audio_dbg(LSD_OK,"ok to request regulator notifier: %d\n",
+				 ret);
 		}
 	}
 
@@ -1391,6 +1414,7 @@ static int aic3x_probe(struct snd_soc_codec *codec)
 	aic3x_init(codec);
 
 	if (aic3x->setup) {
+		lsd_audio_dbg(LSD_OK,"have aic3x->setup\n");
 		/* setup GPIO functions */
 		snd_soc_write(codec, AIC3X_GPIO1_REG,
 			      (aic3x->setup->gpio_func[0] & 0xf) << 4);
@@ -1477,8 +1501,13 @@ static int aic3x_i2c_probe(struct i2c_client *i2c,
 
 	aic3x = kzalloc(sizeof(struct aic3x_priv), GFP_KERNEL);
 	if (aic3x == NULL) {
+		lsd_audio_dbg(LSD_ERR,"failed to create private data\n");
 		dev_err(&i2c->dev, "failed to create private data\n");
 		return -ENOMEM;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"ok to create private data\n");
 	}
 
 	aic3x->control_data = i2c;
@@ -1486,9 +1515,11 @@ static int aic3x_i2c_probe(struct i2c_client *i2c,
 
 	i2c_set_clientdata(i2c, aic3x);
 	if (pdata) {
+		lsd_audio_dbg(LSD_DBG,"aic3x->gpio_reset = %d\n",pdata->gpio_reset);
 		aic3x->gpio_reset = pdata->gpio_reset;
 		aic3x->setup = pdata->setup;
 	} else {
+		lsd_audio_dbg(LSD_DBG,"aic3x->gpio_reset = -1\n");
 		aic3x->gpio_reset = -1;
 	}
 
@@ -1501,7 +1532,14 @@ static int aic3x_i2c_probe(struct i2c_client *i2c,
 	ret = snd_soc_register_codec(&i2c->dev,
 			&soc_codec_dev_aic3x, &aic3x_dai, 1);
 	if (ret < 0)
+	{
+		lsd_audio_dbg(LSD_ERR,"snd_soc_register_codec error\n");
 		kfree(aic3x);
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"snd_soc_register_codec ok\n");
+	}	
 	return ret;
 }
 
@@ -1529,8 +1567,17 @@ static inline void aic3x_i2c_init(void)
 
 	ret = i2c_add_driver(&aic3x_i2c_driver);
 	if (ret)
+	{
+		lsd_audio_dbg(LSD_ERR,"%s: error regsitering i2c driver, %d\n",
+		       __func__, ret);
 		printk(KERN_ERR "%s: error regsitering i2c driver, %d\n",
 		       __func__, ret);
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"%s: ok regsitering i2c driver, %d\n",
+		       __func__, ret);	
+	}
 }
 
 static inline void aic3x_i2c_exit(void)
@@ -1545,7 +1592,14 @@ static int __init aic3x_modinit(void)
 #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
 	ret = i2c_add_driver(&aic3x_i2c_driver);
 	if (ret != 0) {
+		lsd_audio_dbg(LSD_ERR,"Failed to register TLV320AIC3x I2C driver: %d\n",
+		       ret);
 		printk(KERN_ERR "Failed to register TLV320AIC3x I2C driver: %d\n",
+		       ret);
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"ok to register TLV320AIC3x I2C driver: %d\n",
 		       ret);
 	}
 #endif

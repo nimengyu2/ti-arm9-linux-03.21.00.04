@@ -11,6 +11,7 @@
 
 #include <linux/init.h>
 #include <linux/module.h>
+#define DEBUG    1 
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
@@ -27,6 +28,7 @@
 
 #include "davinci-pcm.h"
 #include "davinci-i2s.h"
+#include <linux/lierda_debug.h>
 
 
 /*
@@ -654,21 +656,36 @@ static int davinci_i2s_probe(struct platform_device *pdev)
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!mem) {
+		lsd_audio_dbg(LSD_ERR,"no mem resource?\n");
 		dev_err(&pdev->dev, "no mem resource?\n");
 		return -ENODEV;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"have mem resource\n");
 	}
 
 	ioarea = request_mem_region(mem->start, (mem->end - mem->start) + 1,
 				    pdev->name);
 	if (!ioarea) {
+		lsd_audio_dbg(LSD_ERR,"McBSP region already claimed\n");
 		dev_err(&pdev->dev, "McBSP region already claimed\n");
 		return -EBUSY;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"McBSP region already ok\n");
 	}
 
 	dev = kzalloc(sizeof(struct davinci_mcbsp_dev), GFP_KERNEL);
 	if (!dev) {
+		lsd_audio_dbg(LSD_ERR,"kzalloc  davinci_mcbsp_dev et = -ENOMEM;\n");
 		ret = -ENOMEM;
 		goto err_release_region;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"kzalloc  davinci_mcbsp_dev ok\n");
 	}
 	if (pdata) {
 		dev->enable_channel_combine = pdata->enable_channel_combine;
@@ -689,8 +706,13 @@ static int davinci_i2s_probe(struct platform_device *pdev)
 
 	dev->clk = clk_get(&pdev->dev, NULL);
 	if (IS_ERR(dev->clk)) {
+		lsd_audio_dbg(LSD_ERR,"IS_ERR(dev->clk) err\n");
 		ret = -ENODEV;
 		goto err_free_mem;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"IS_ERR(dev->clk) ok\n");
 	}
 	clk_enable(dev->clk);
 
@@ -705,17 +727,27 @@ static int davinci_i2s_probe(struct platform_device *pdev)
 	/* first TX, then RX */
 	res = platform_get_resource(pdev, IORESOURCE_DMA, 0);
 	if (!res) {
+		lsd_audio_dbg(LSD_ERR,"no mem resource?\n");
 		dev_err(&pdev->dev, "no DMA resource\n");
 		ret = -ENXIO;
 		goto err_free_mem;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"have mem resource\n");
 	}
 	dev->dma_params[SNDRV_PCM_STREAM_PLAYBACK].channel = res->start;
 
 	res = platform_get_resource(pdev, IORESOURCE_DMA, 1);
 	if (!res) {
+		lsd_audio_dbg(LSD_ERR,"no DMA resource?\n");
 		dev_err(&pdev->dev, "no DMA resource\n");
 		ret = -ENXIO;
 		goto err_free_mem;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"have DMA resource\n");
 	}
 	dev->dma_params[SNDRV_PCM_STREAM_CAPTURE].channel = res->start;
 	dev->dev = &pdev->dev;
@@ -724,8 +756,14 @@ static int davinci_i2s_probe(struct platform_device *pdev)
 
 	ret = snd_soc_register_dai(&pdev->dev, &davinci_i2s_dai);
 	if (ret != 0)
+	{
+		lsd_audio_dbg(LSD_ERR,"snd_soc_register_dai error\n");
 		goto err_free_mem;
-
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"snd_soc_register_dai ok\n");
+	}
 	return 0;
 
 err_free_mem:

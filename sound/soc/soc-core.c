@@ -29,6 +29,7 @@
 #include <linux/pm.h>
 #include <linux/bitops.h>
 #include <linux/debugfs.h>
+#define DEBUG    1 
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <sound/ac97_codec.h>
@@ -38,6 +39,7 @@
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <sound/initval.h>
+#include <linux/lierda_debug.h>
 
 #define NAME_SIZE	32
 
@@ -1276,6 +1278,8 @@ find_platform:
 	}
 	/* no, then find CPU DAI from registered DAIs*/
 	list_for_each_entry(platform, &platform_list, list) {
+		lsd_dbg(LSD_DBG,"platform->name=%s,dai_link->platform_name=%s\n",
+				platform->name,dai_link->platform_name);
 		if (!strcmp(platform->name, dai_link->platform_name)) {
 
 			if (!try_module_get(platform->dev->driver->owner))
@@ -1286,6 +1290,8 @@ find_platform:
 		}
 	}
 
+	lsd_dbg(LSD_ERR,"platform %s not registered\n",
+			dai_link->platform_name);
 	dev_dbg(card->dev, "platform %s not registered\n",
 			dai_link->platform_name);
 	return 0;
@@ -3210,17 +3216,31 @@ int snd_soc_register_codec(struct device *dev,
 	struct snd_soc_codec *codec;
 	int ret, i;
 
+	lsd_audio_dbg(LSD_DBG,"enter function %s\n",__FUNCTION__);
+	lsd_audio_dbg(LSD_DBG,"codec register %s\n", dev_name(dev));
 	dev_dbg(dev, "codec register %s\n", dev_name(dev));
 
 	codec = kzalloc(sizeof(struct snd_soc_codec), GFP_KERNEL);
 	if (codec == NULL)
+	{
+		lsd_audio_dbg(LSD_ERR,"kzalloc snd_soc_codec error\n");
 		return -ENOMEM;
-
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"kzalloc snd_soc_codec ok\n");
+	}
+	
 	/* create CODEC component name */
 	codec->name = fmt_single_name(dev, &codec->id);
 	if (codec->name == NULL) {
+		lsd_audio_dbg(LSD_ERR,"create CODEC component name error\n");
 		kfree(codec);
 		return -ENOMEM;
+	}
+	else
+	{
+		lsd_audio_dbg(LSD_OK,"create CODEC component name ok\n");
 	}
 
 	/* allocate CODEC register cache */
@@ -3253,11 +3273,19 @@ int snd_soc_register_codec(struct device *dev,
 		fixup_codec_formats(&dai_drv[i].capture);
 	}
 
+	lsd_audio_dbg(LSD_DBG,"num_dai=%d\n",num_dai);
 	/* register any DAIs */
 	if (num_dai) {
 		ret = snd_soc_register_dais(dev, dai_drv, num_dai);
 		if (ret < 0)
+		{
+			lsd_audio_dbg(LSD_ERR,"snd_soc_register_dais error\n");
 			goto error;
+		}
+		else
+		{
+			lsd_audio_dbg(LSD_OK,"snd_soc_register_dais ok\n");
+		}
 	}
 
 	mutex_lock(&client_mutex);
@@ -3313,6 +3341,7 @@ EXPORT_SYMBOL_GPL(snd_soc_unregister_codec);
 
 static int __init snd_soc_init(void)
 {
+	lsd_audio_dbg(LSD_DBG,"enter function=%s\n",__FUNCTION__);
 #ifdef CONFIG_DEBUG_FS
 	debugfs_root = debugfs_create_dir("asoc", NULL);
 	if (IS_ERR(debugfs_root) || !debugfs_root) {

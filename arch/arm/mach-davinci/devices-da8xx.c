@@ -23,6 +23,7 @@
 #include <mach/da8xx.h>
 #include <mach/cpuidle.h>
 #include <linux/ti_omapl_pru_suart.h>
+#include <linux/lierda_debug.h>
 
 #include "clock.h"
 
@@ -549,6 +550,7 @@ int __init da8xx_register_emac(void)
 	return ret;
 }
 
+#if 0
 static struct resource da830_mcasp1_resources[] = {
 	{
 		.name	= "mcasp1",
@@ -605,11 +607,6 @@ static struct platform_device da850_mcasp_device = {
 	.resource	= da850_mcasp_resources,
 };
 
-struct platform_device davinci_pcm_device = {
-	.name	= "davinci-pcm-audio",
-	.id	= -1,
-};
-
 void __init da8xx_register_mcasp(int id, struct snd_platform_data *pdata)
 {
 	platform_device_register(&davinci_pcm_device);
@@ -623,6 +620,14 @@ void __init da8xx_register_mcasp(int id, struct snd_platform_data *pdata)
 		platform_device_register(&da850_mcasp_device);
 	}
 }
+#endif
+
+struct platform_device davinci_pcm_device = {
+	.name	= "davinci-pcm-audio",
+	.id	= -1,
+};
+
+
 
 static const struct display_panel disp_panel = {
 	QVGA,
@@ -971,6 +976,7 @@ static struct resource da850_mcbsp0_resources[] = {
 		.end	= IRQ_DA850_MCBSP0XINT,
 		.flags	= IORESOURCE_IRQ,
 	},
+#if 0
 	/* first RX, then TX */
 	{
 		.start	= 2,
@@ -982,7 +988,45 @@ static struct resource da850_mcbsp0_resources[] = {
 		.end	= 3,
 		.flags	= IORESOURCE_DMA,
 	},
+#endif
+	// nmy modify
+	/* first RX, then TX */
+	{
+		.start	= 3,
+		.end	= 3,
+		.flags	= IORESOURCE_DMA,
+	},
+	{
+		.start	= 2,
+		.end	= 2,
+		.flags	= IORESOURCE_DMA,
+	},
+
 };
+
+
+#if 1
+// nmy add
+static struct platform_device am1808_asp_device = {
+	.name		= "davinci-mcbsp",
+	.id		= 0,
+	.num_resources	= ARRAY_SIZE(da850_mcbsp0_resources),
+	.resource	= da850_mcbsp0_resources,
+};
+
+void __init am1808_init_asp(struct snd_platform_data *pdata)
+{
+	int ret;
+	platform_device_register(&davinci_pcm_device);
+	
+	lsd_dbg(LSD_DBG,"first of am1808_init_asp\n");	
+	am1808_asp_device.dev.platform_data = pdata;
+	ret = platform_device_register(&am1808_asp_device);
+	lsd_dbg(LSD_DBG,"last of am1808_init_asp,ret=%d\n",ret);	
+}
+#endif
+
+
 
 static struct resource da850_mcbsp1_resources[] = {
 	{

@@ -19,6 +19,7 @@
 #include <linux/i2c/pca953x.h>
 #include <linux/input.h>
 #include <linux/mfd/tps6507x.h>
+#include <linux/i2c/tsc2007.h> // Modify by toby.zhang @2010.12.25
 #include <linux/gpio.h>
 #include <linux/gpio_keys.h>
 #include <linux/platform_device.h>
@@ -316,7 +317,8 @@ static struct mtd_partition da850_evm_nandflash_partition[] = {
 		.mask_flags	= 0,
 	},
 	{
-		.name		= "filesystem",
+		//.name		= "filesystem",
+		.name		= "rootfs",
 		.offset		= MTDPART_OFS_APPEND,
 		.size		= MTDPART_SIZ_FULL,
 		.mask_flags	= 0,
@@ -337,7 +339,8 @@ static struct davinci_nand_pdata da850_evm_nandflash_data = {
 	.parts		= da850_evm_nandflash_partition,
 	.nr_parts	= ARRAY_SIZE(da850_evm_nandflash_partition),
 	.ecc_mode	= NAND_ECC_HW,
-	.ecc_bits	= 4,
+	//.ecc_bits	= 4,
+        .ecc_bits	= 1,
 	.options	= NAND_USE_FLASH_BBT,
 	.timing		= &da850_evm_nandflash_timing,
 };
@@ -1315,6 +1318,64 @@ static struct tps6507x_board tps_board = {
 	.tps6507x_ts_init_data = &tps6507x_touchscreen_data,
 };
 
+
+//----------------------------------------------------------------------------//
+//  nmy add tsc2007 code   start  2010-12-10  14:00
+//----------------------------------------------------------------------------//
+
+/*
+ * TSC 2007 Support
+ */
+#define TSC2007_GPIO_IRQ_PIN	GPIO_TO_PIN(2, 6)
+
+static int tsc2007_init_irq(void)
+{
+	int ret = 0;
+        //pr_warning("%s: lierda_tcs2007_init_irq %d\n", __func__, ret);
+
+	ret = gpio_request(TSC2007_GPIO_IRQ_PIN, "tsc2007-irq");
+	if (ret < 0) {
+		pr_warning("%s: failed to TSC2007 IRQ GPIO: %d\n",
+								__func__, ret);
+		return ret;
+	}
+
+	ret = davinci_cfg_reg(DA850_GPIO2_6);
+	if (ret) {
+		pr_warning("%s: PinMux setup for GPIO %d failed: %d\n",
+			   __func__, TSC2007_GPIO_IRQ_PIN, ret);
+		return ret;
+	}
+
+	gpio_direction_input(TSC2007_GPIO_IRQ_PIN);
+
+	return ret;
+}
+
+static void tsc2007_exit_irq(void)
+{
+	gpio_free(TSC2007_GPIO_IRQ_PIN);
+}
+
+static int tsc2007_get_irq_level(void)
+{
+	//pr_warning("%s: lierda_tsc2007_get_irq_level %d\n", __func__, 0);
+	return gpio_get_value(TSC2007_GPIO_IRQ_PIN) ? 0 : 1;
+}
+
+struct tsc2007_platform_data da850evm_tsc2007data = {
+	.model = 2007,
+	.x_plate_ohms = 180,
+	.get_pendown_state = tsc2007_get_irq_level,
+	.init_platform_hw = tsc2007_init_irq,
+	.exit_platform_hw = tsc2007_exit_irq,
+};
+//----------------------------------------------------------------------------//
+//  nmy add tsc2007 code   end  2010-12-10  14:00
+//----------------------------------------------------------------------------//
+
+
+
 static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
 #if 0
 	{
@@ -1322,6 +1383,11 @@ static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
 		.platform_data = &da850_evm_i2c_eeprom_info,
 	},
 #endif
+	{
+		I2C_BOARD_INFO("tsc2007", 0x48),
+		.platform_data = &da850evm_tsc2007data,
+	},
+
 	{
 		I2C_BOARD_INFO("tlv320aic3x", 0x18),
 	},
@@ -1466,6 +1532,7 @@ static int __init da850_evm_config_emac(void)
 	/* configure the CFGCHIP3 register for RMII or MII */
 	__raw_writel(val, cfg_chip3_base);
 
+#if 0
 	ret = davinci_cfg_reg(DA850_GPIO2_6);
 	if (ret)
 		pr_warning("da850_evm_init:GPIO(2,6) mux setup "
@@ -1480,6 +1547,8 @@ static int __init da850_evm_config_emac(void)
 
 	/* Enable/Disable MII MDIO clock */
 	gpio_direction_output(DA850_MII_MDIO_CLKEN_PIN, rmii_en);
+
+#endif
 
 	soc_info->emac_pdata->phy_id = DA850_EVM_PHY_ID;
 
@@ -2018,12 +2087,32 @@ static __init void da850_evm_init(void)
 		da850_wl12xx_init();
 	}
 #endif
+	ret = davinci_cfg_reg_list(da850_mmcsd0_pins);
+		if (ret)
+			pr_warning("da850_evm_init: mmcsd0 mux setup failed:"
+					" %d\n", ret);
+	ret = da8xx_register_mmcsd0(&da850_mmc_config[0]);
+		if (ret)
+			pr_warning("da850_evm_init: mmcsd0 registration failed:"
+					" %d\n", ret);
+
 	davinci_serial_init(&da850_evm_uart_config);
 
 #if 0
 	if (have_imager())
 		i2c_add_driver(&pca9543a_driver);
 #endif
+
+	//----------------------------------------------------------------------------//
+	// nmy  修改关于tsc2007 触摸屏芯片的使用   start   2010-12-10  14:00
+	//----------------------------------------------------------------------------//
+	//pr_warning("%s: lierda_interrupt tsc2007 init %d\n", __func__, ret);
+	   da850_evm_i2c_devices[0].irq = gpio_to_irq(TSC2007_GPIO_IRQ_PIN),
+	//i2c_register_board_info(1, &da850_evm_i2c_devices[0], 1);
+	//----------------------------------------------------------------------------//
+	// nmy  修改关于tsc2007 触摸屏芯片的使用  end   2010-12-10  14:00
+	//----------------------------------------------------------------------------//
+
 
 	i2c_register_board_info(1, da850_evm_i2c_devices,
 			ARRAY_SIZE(da850_evm_i2c_devices));

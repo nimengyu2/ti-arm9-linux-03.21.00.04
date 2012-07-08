@@ -506,6 +506,7 @@ static struct nand_ecclayout hwecc4_small __initconst = {
  * and not overlapping the default BBT markers.
  */
 static struct nand_ecclayout hwecc4_2048 __initconst = {
+#if 0
 	.eccbytes = 40,
 	.eccpos = {
 		/* at the end of spare sector */
@@ -520,6 +521,23 @@ static struct nand_ecclayout hwecc4_2048 __initconst = {
 		/* 5 bytes at offset 8 hold BBT markers */
 		/* 8 bytes at offset 16 hold JFFS2 clean markers */
 	},
+#endif
+
+#if 1
+	.eccbytes = 10,
+	.eccpos = {6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+		   22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+		   38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+		   54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+		},
+	.oobfree = {
+			{.offset = 0, .length = 6},
+			{.offset = 16, .length = 6},
+			{.offset = 32, .length = 6},
+			{.offset = 48, .length = 6},
+		}
+#endif
+
 };
 
 /* An ECC layout for using 4-bit ECC with large-page (4096bytes) flash,

@@ -301,15 +301,17 @@ static struct mtd_partition da850_evm_nandflash_partition[] = {
 	{
 		.name		= "UBL",
 		.offset		= MTDPART_OFS_APPEND,
-		.size		= SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,
+		.size		= 4*SZ_128K,
+		.mask_flags	= 0,
 	},
+#if 1
 	{
 		.name		= "u-boot",
 		.offset		= MTDPART_OFS_APPEND,
-		.size		= 4 * SZ_128K,
-		.mask_flags	= MTD_WRITEABLE,
+		.size		= SZ_128K,
+		.mask_flags	= 0,
 	},
+#endif
 	{
 		.name		= "kernel",
 		.offset		= 0x200000,
@@ -338,9 +340,10 @@ static struct davinci_aemif_timing da850_evm_nandflash_timing = {
 static struct davinci_nand_pdata da850_evm_nandflash_data = {
 	.parts		= da850_evm_nandflash_partition,
 	.nr_parts	= ARRAY_SIZE(da850_evm_nandflash_partition),
-	.ecc_mode	= NAND_ECC_HW,
-	//.ecc_bits	= 4,
-        .ecc_bits	= 1,
+	//.ecc_mode	= NAND_ECC_HW,
+	.ecc_mode	= NAND_ECC_SOFT,	
+	.ecc_bits	= 4,
+        //.ecc_bits	= 1,
 	.options	= NAND_USE_FLASH_BBT,
 	.timing		= &da850_evm_nandflash_timing,
 };
